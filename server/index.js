@@ -26,10 +26,15 @@ app.use(cookieParser());
 
 connectDB();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://zynk-nine.vercel.app"
+];
+
 //soket connetion with cors configuration
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://average-prairie-milwaukee-lives.trycloudflare.com"],
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -40,11 +45,6 @@ setIO(io)
 // pass io to socket file
 socketHandler(io);
 
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://zynk-nine.vercel.app"
-];
 
 app.use(
   cors({
