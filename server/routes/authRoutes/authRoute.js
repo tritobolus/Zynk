@@ -74,8 +74,8 @@ router.post("/signin", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,  // true -for production
-      sameSite: "lax",  // none -for production
+      secure: true,  // true -for production
+      sameSite: "none",  // none -for production
       maxAge: 24 * 60 * 60 * 1000,
     });
 
