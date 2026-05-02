@@ -1,5 +1,6 @@
 import React from "react";
-import { Body } from "../componenets/body";
+import { Body } from "../componenets/Body";
+// import { Body } from "../componenets/body";
 
 import { useCC } from "../context/Context";
 import { useEffect } from "react";
