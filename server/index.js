@@ -40,9 +40,15 @@ setIO(io)
 // pass io to socket file
 socketHandler(io);
 
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://zynk-nine.vercel.app"
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://average-prairie-milwaukee-lives.trycloudflare.com", "https://zynk-nine.vercel.app/"],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
