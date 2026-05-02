@@ -42,7 +42,7 @@ socketHandler(io);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://average-prairie-milwaukee-lives.trycloudflare.com"],
+    origin: ["http://localhost:5173", "https://average-prairie-milwaukee-lives.trycloudflare.com", "https://zynk-nine.vercel.app/"],
     credentials: true,
   }),
 );
