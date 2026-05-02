@@ -4,6 +4,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import { MdDone } from "react-icons/md";
 import { useCC } from "../../context/Context";
 import axios from "axios";
+import { BACKEND_URL } from "../../constants";
 
 export const Settings = () => {
   const { loginUser, getUsers, userId, handleSettings } = useCC();
@@ -20,7 +21,7 @@ export const Settings = () => {
 
   const handleUsername = async () => {
     try {
-      await axios.patch("http://localhost:8000/settings/changeUsername", {
+      await axios.patch(BACKEND_URL + "/settings/changeUsername", {
         userId: loginUser._id,
         newUsername,
       });
@@ -33,7 +34,7 @@ export const Settings = () => {
 
   const handleBio = async () => {
     try {
-      await axios.patch("http://localhost:8000/settings/changeBio", {
+      await axios.patch(BACKEND_URL + "/settings/changeBio", {
         userId: loginUser._id,
         newBio,
       });
@@ -46,7 +47,7 @@ export const Settings = () => {
 
   const handleActiveStatus = async () => {
     try {
-      await axios.patch("http://localhost:8000/settings/changeActiveStatus", {
+      await axios.patch(BACKEND_URL + "/settings/changeActiveStatus", {
         userId: loginUser._id,
         currentStatus: loginUser?.activestatus,
       });
@@ -58,7 +59,7 @@ export const Settings = () => {
 
   const handleDarkMode = async () => {
     try {
-      await axios.patch("http://localhost:8000/settings/changeDarkMode", {
+      await axios.patch(BACKEND_URL + "/settings/changeDarkMode", {
         userId: loginUser._id,
         currentDarkMode: loginUser?.darkmode,
       });
@@ -79,7 +80,7 @@ export const Settings = () => {
         "https://api.cloudinary.com/v1_1/dqxfpedkq/image/upload",
         imageData
       );
-      await axios.patch("http://localhost:8000/settings/changeProfileImage/", {
+      await axios.patch(BACKEND_URL + "/settings/changeProfileImage/", {
         imageUrl: data.data.secure_url,
         userId,
       });

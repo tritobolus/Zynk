@@ -248,7 +248,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
       // Send Private Message
       if (currentRightWindowType === "private") {
         const res = await axios.post(
-          "http://localhost:8000/message/sendPrivateMessage",
+          BACKEND_URL + "/message/sendPrivateMessage",
           {
             senderId: userId,
             receiverId: user._id,
@@ -306,7 +306,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
       // Send Group Message
       if (currentRightWindowType === "group") {
         const res = await axios.post(
-          "http://localhost:8000/message/sendGroupMessage",
+          BACKEND_URL + "/message/sendGroupMessage",
           {
             senderId: userId,
             groupId: currentRightWindow,
@@ -376,7 +376,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
         }
         setMessageLoading(true);
         const res = await axios.get(
-          "http://localhost:8000/message/getmessages",
+          BACKEND_URL + "/message/getmessages",
           {
             params: {
               userA: userId,
@@ -393,7 +393,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
       try {
         setMessageLoading(true);
         const res = await axios.get(
-          "http://localhost:8000/message/getGroupMessages",
+          BACKEND_URL + "/message/getGroupMessages",
           {
             params: {
               groupId: currentRightWindow,

@@ -48,7 +48,7 @@ export const SignUp = () => {
     }
     try {
       const res = await axios.post(
-        "http://localhost:8000/authentication/signup",
+        BACKEND_URL + "/authentication/signup",
         { username, email, password }
       );
       if (res.status == 200) alert("User registered!");
