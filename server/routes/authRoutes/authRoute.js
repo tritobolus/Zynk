@@ -113,53 +113,53 @@ router.get("/verifyEmail", async (req, res) => {
       service: "gmail",
       auth: {
         user: "akashhowly463@gmail.com",
-        pass: "zzkspfsbagjbwlsm",
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    const info = await transporter.sendMail({
-      from: '"Akash Web App" <akashhowly463@gmail.com>',
-      to: email,
-      subject: "Verify Your Email - OTP Code",
-      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 40px 0;">
-            <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-      
-                <h2 style="color: #333; text-align: center;">Email Verification</h2>
-      
-                <p style="color: #555; font-size: 14px;">
-                    Hi,
-                </p>
-      
-                <p style="color: #555; font-size: 14px;">
-                    Thank you for registering with <strong>Akash Web App</strong>.
-                    Please use the following One-Time Password (OTP) to verify your email address.
-                </p>
-      
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="display: inline-block; padding: 15px 25px; font-size: 24px; letter-spacing: 4px; font-weight: bold; color: #ffffff; background-color: #4f46e5; border-radius: 8px;">
-                        ${otp}
-                    </span>
-                </div>
-      
-                <p style="color: #555; font-size: 14px;">
-                    This OTP is valid for <strong>10 minutes</strong>. Do not share this code with anyone.
-                </p>
-      
-                <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                    If you did not request this verification, please ignore this email.
-                </p>
-      
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-      
-                <p style="color: #aaa; font-size: 12px; text-align: center;">
-                    © 2026 Akash Web App. All rights reserved.
-                </p>
+   const info = await transporter.sendMail({
+  from: '"Welcome to Zynk" <akashhowly463@gmail.com>',
+  to: email,
+  subject: "Verify Your Email - OTP Code",
+  text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+  html: `
+    <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 40px 0;">
+        <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+
+            <h2 style="color: #333; text-align: center;">Zynk Email Verification</h2>
+
+            <p style="color: #555; font-size: 14px;">
+                Hi,
+            </p>
+
+            <p style="color: #555; font-size: 14px;">
+                Welcome to <strong>Zynk</strong> — your chat space to connect and communicate in real time.
+                Use the One-Time Password (OTP) below to verify your email and get started.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <span style="display: inline-block; padding: 15px 25px; font-size: 24px; letter-spacing: 4px; font-weight: bold; color: #ffffff; background-color: #4f46e5; border-radius: 8px;">
+                    ${otp}
+                </span>
             </div>
+
+            <p style="color: #555; font-size: 14px;">
+                This OTP is valid for <strong>10 minutes</strong>. Please do not share it with anyone.
+            </p>
+
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+                If you didn’t request this, you can safely ignore this email.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+
+            <p style="color: #aaa; font-size: 12px; text-align: center;">
+                © 2026 Zynk Chat App. All rights reserved.
+            </p>
         </div>
-    `,
-    });
+    </div>
+  `,
+});
 
     console.log("Message sent:", info.messageId);
 
