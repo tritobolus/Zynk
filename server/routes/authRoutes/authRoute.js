@@ -110,9 +110,9 @@ router.get("/verifyEmail", async (req, res) => {
 
     //creating the transporter
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: process.env.SERVICE,
       auth: {
-        user: "akashhowly463@gmail.com",
+        user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
@@ -185,7 +185,7 @@ router.delete("/signout", async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: false, //secure: isProduction,
-      sameSite: "lax", //sameSite: isProduction ? "none" : "lax",
+      sameSite: "none", //sameSite: isProduction ? "none" : "lax",
     });
     return res.status(200).json({ message: "Successfully Sign Out" });
   } catch (error) {
