@@ -1,6 +1,6 @@
 import express from "express";
 import otpGenerator from "otp-generator";
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import verifyUser from "../../middleware/verifyUser.js";
@@ -108,23 +108,15 @@ router.get("/verifyEmail", async (req, res) => {
 
     console.log(otp);
 
-    //creating the transporter
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Initialize SendGrid with API key
+    sgMail.setApiKey(process.env.SEND_GRID_API);
 
-   const info = await transporter.sendMail({
-  from: `"Welcome to Zynk" <${process.env.EMAIL_USER}>`,
-  to: email,
-  subject: "Verify Your Email - OTP Code",
-  text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
-  html: `
+    await sgMail.send({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email - OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+      html: `
     <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 40px 0;">
         <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
 
@@ -150,7 +142,7 @@ router.get("/verifyEmail", async (req, res) => {
             </p>
 
             <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                If you didn’t request this, you can safely ignore this email.
+                If you didn't request this, you can safely ignore this email.
             </p>
 
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
@@ -161,9 +153,9 @@ router.get("/verifyEmail", async (req, res) => {
         </div>
     </div>
   `,
-});
+    });
 
-    console.log("Message sent:", info.messageId);
+    console.log("OTP email sent via SendGrid to:", email);
 
     return res.status(200).json({ mssage: "OTP sent", OTP: otp });
   } catch (error) {
