@@ -108,7 +108,7 @@ router.get("/getmessages", async (req, res) => {
 
     return res.status(200).json({ message: "get all messages", messages });
   } catch (error) {
-    consoel.log(error);
+    console.log(error);
   }
 });
 
@@ -125,7 +125,7 @@ router.get("/getLastChats", async (req, res) => {
 
     return res.status(200).json({ message: "get all last chats", privateChats, groupChats });
   } catch (error) {
-    consoel.log(error);
+    console.log(error);
   }
 });
 
@@ -138,7 +138,7 @@ router.get("/getGroupMessages", async (req, res) => {
 
     return res.status(200).json({ message: "get all messages", messages });
   } catch (error) {
-    consoel.log(error);
+    console.log(error);
   }
 });
 
