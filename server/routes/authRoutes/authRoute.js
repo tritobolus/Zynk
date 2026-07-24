@@ -118,7 +118,7 @@ router.get("/verifyEmail", async (req, res) => {
     });
 
    const info = await transporter.sendMail({
-  from: '"Welcome to Zynk" <akashhowly463@gmail.com>',
+  from: `"Welcome to Zynk" <${process.env.EMAIL_USER}>`,
   to: email,
   subject: "Verify Your Email - OTP Code",
   text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
@@ -181,11 +181,10 @@ router.get("/verify", verifyUser, async (req, res) => {
 
 router.delete("/signout", async (req, res) => {
   try {
-    // const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("token", {
       httpOnly: true,
-      secure: false, //secure: isProduction,
-      sameSite: "none", //sameSite: isProduction ? "none" : "lax",
+      secure: true, // must match the secure option used in signin
+      sameSite: "none", // must match the sameSite option used in signin
     });
     return res.status(200).json({ message: "Successfully Sign Out" });
   } catch (error) {
