@@ -1,6 +1,6 @@
 import express from "express";
 import otpGenerator from "otp-generator";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import verifyUser from "../../middleware/verifyUser.js";
@@ -108,19 +108,11 @@ router.get("/verifyEmail", async (req, res) => {
 
     console.log(otp);
 
-    //creating the transporter
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    //initialize Resend with API key
+    const resend = new Resend(process.env.RESEND_API);
 
-   const info = await transporter.sendMail({
-  from: `"Welcome to Zynk" <${process.env.EMAIL_USER}>`,
+    const { data, error: resendError } = await resend.emails.send({
+  from: 'Zynk App <onboarding@resend.dev>',
   to: email,
   subject: "Verify Your Email - OTP Code",
   text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
@@ -163,7 +155,12 @@ router.get("/verifyEmail", async (req, res) => {
   `,
 });
 
-    console.log("Message sent:", info.messageId);
+    if (resendError) {
+      console.error("Resend Error:", resendError);
+      return res.status(500).json({ mssage: "Failed to send OTP email" });
+    }
+
+    console.log("Message sent:", data.id);
 
     return res.status(200).json({ mssage: "OTP sent", OTP: otp });
   } catch (error) {

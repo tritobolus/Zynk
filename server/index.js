@@ -3,10 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
-import dns from "dns";
 
-// Fix for Node 18+ IPv6 hanging issues with Nodemailer on platforms like Render
-dns.setDefaultResultOrder('ipv4first');
 import connectDB from "./config/db.js";
 
 import getUser from "./routes/userRoutes/userRoute.js";
