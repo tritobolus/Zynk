@@ -13,26 +13,27 @@ export const Users = () => {
     handleDropdown,
     dropDown,
     newGroup,
-    loginUser
+    loginUser,
+    avatarShapeClass,
   } = useCC();
   return (
     <div className="flex flex-col gap-y-2">
       {/* middle section */}
-      <div className={`relative rounded-xl ${loginUser?.darkmode ? "bg-gray-900 text-white" : "bg-gray-100"}  py-2`}>
+      <div className="relative rounded-xl bg-input-bg text-text-base border border-border-color py-2">
         <input
           type="text"
           placeholder="search users..."
-          className="pl-10 pr-4 focus:outline-none w-full"
+          className="pl-10 pr-4 focus:outline-none w-full bg-transparent text-text-base placeholder-text-dim"
         />
         <IoMdSearch
           size={18}
-          className="absolute text-gray-500 top-[11px] left-3"
+          className="absolute text-text-muted top-[11px] left-3"
         />
       </div>
 
       {/* lower section */}
-      <div className="flex gap-x-4 text-sm font-semibold text-gray-500 pb-1 ">
-        <button className="hover:cursor-pointer  text-violet-700  border-violet-600">
+      <div className="flex gap-x-4 text-sm font-semibold text-text-muted pb-1 ">
+        <button className="hover:cursor-pointer text-primary border-primary">
           All
         </button>
         <button className="hover:cursor-pointer">Active</button>
@@ -42,18 +43,18 @@ export const Users = () => {
         {users.map((user) => (
           <div
             key={user._id}
-            className={`flex justify-between  items-center   hover:bg-gray-100 p-1 rounded-xl hover:cursor-pointer transition-all duration-100 `}
+            className="flex justify-between items-center hover:bg-sidebar-hover p-1 rounded-xl hover:cursor-pointer transition-all duration-100"
           >
             <div className="flex gap-x-3">
               <div className="relative  leading-tight">
                 <img
-                  src="https://cdn.hswstatic.com/gif/play/0b7f4e9b-f59c-4024-9f06-b3dc12850ab7-1920-1080.jpg"
+                  src={user.profileImage}
                   alt=""
-                  className="h-12 w-12 object-cover rounded-full"
+                  className={`h-12 w-12 object-cover border border-primary ${avatarShapeClass}`}
                 />
                 <div className="absolute top-8   right-0 flex items-center gap-2">
                   <span
-                    className={`h-3 w-3  rounded-full ${onlineUsers.includes(user._id) ? "bg-green-500 border-2 border-white" : "bg-gray-300 border-2 border-white"}`}
+                    className={`h-3 w-3  rounded-full ${onlineUsers.includes(user._id) ? "bg-green-500 border-2 border-sidebar" : "bg-text-dim border-2 border-sidebar"}`}
                   ></span>
                 </div>
               </div>

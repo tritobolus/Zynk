@@ -5,8 +5,24 @@ import { BACKEND_URL } from "../constants";
 
 export const Context = createContext();
 
+export const getAvatarShapeClass = (shape) => {
+  switch (shape) {
+    case "circle":
+      return "rounded-full";
+    case "squircle":
+      return "rounded-2xl";
+    case "blob2":
+      return "rounded-[60%_40%_30%_70%/60%_30%_70%_40%]";
+    case "teardrop":
+      return "rounded-[0%_100%_100%_100%]";
+    case "wobbly":
+    default:
+      return "rounded-[40%_60%_60%_40%/60%_40%_60%_40%]";
+  }
+};
+
 export const ContextProvider = ({ children }) => {
-  //my details
+  // my details
   const [auth, setAuth] = useState(null);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -23,49 +39,64 @@ export const ContextProvider = ({ children }) => {
   const [groups, setGroups] = useState([]);
   const [lastPrivateChats, setLastPrivateChats] = useState([]);
   const [lastGroupChats, setLastGroupChats] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const [loginUser, setLoginUser] = useState(null);
+  const [typingUsers, setTypingUsers] = useState({});
 
-  //for dropdown
+  const avatarShapeClass = getAvatarShapeClass(loginUser?.avatarShape || "wobbly");
+
+  // for dropdown
   const [newGroup, setNewGroup] = useState(false);
   const [settings, setSettings] = useState(false);
   const [dropDown, setDropDown] = useState(false);
 
-  //search query
+  // search query
   const [query, setQuery] = useState("");
 
-  //get all messages when user login for the first time
+  // get all messages when user login for the first time
   const getLastChats = async () => {
     try {
+      if (!userId) return;
       const res = await axios.get(BACKEND_URL + "/message/getLastChats", {
         params: {
           userId: userId,
         },
       });
-      console.log(res);
       setLastPrivateChats(res.data.privateChats);
       setLastGroupChats(res.data.groupChats);
+      if (res.data.unreadCounts) {
+        setUnreadCounts(res.data.unreadCounts);
+      }
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getLastChats();
   }, [userId]);
 
-  //for dropdown
+  // Apply theme class to :root whenever loginUser changes
+  useEffect(() => {
+    const themes = ["theme-violet", "theme-midnight", "theme-emerald", "theme-ocean", "theme-sunset"];
+    themes.forEach((t) => document.documentElement.classList.remove(t));
+    const userTheme = loginUser?.theme || "violet";
+    document.documentElement.classList.add(`theme-${userTheme}`);
+  }, [loginUser?.theme]);
+
+  // for dropdown
   const handleNewGroup = () => {
     if (newGroup) {
       setNewGroup(false);
-      // setDropDown(false)
     } else {
       setDropDown(false);
       setNewGroup(true);
     }
   };
+
   const handleSettings = () => {
     if (settings) {
       setSettings(false);
-      // setDropDown(false)
     } else {
       setDropDown(false);
       setSettings(true);
@@ -97,20 +128,19 @@ export const ContextProvider = ({ children }) => {
     } catch (error) {
       console.log(error);
       setAuth(false);
-      // setMessage(error.response?.data?.Error || "Authentication failed");
     }
   };
 
   const getUsers = async () => {
     try {
       const res = await axios.get(BACKEND_URL + "/user/getuser");
-      // console.log(res);
       setUsers(res.data.users);
       setLoginUser(res.data.users.find((u) => u._id == userId));
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     if (userId) {
       getUsers();
@@ -120,12 +150,12 @@ export const ContextProvider = ({ children }) => {
   const getGroups = async () => {
     try {
       const res = await axios.get(BACKEND_URL + "/group/getGroups");
-      // console.log(res.data.groupdata);
       setGroups(res.data.groupdata);
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getGroups();
   }, []);
@@ -165,10 +195,15 @@ export const ContextProvider = ({ children }) => {
         setLastPrivateChats,
         lastGroupChats,
         setLastGroupChats,
+        unreadCounts,
+        setUnreadCounts,
         chatId,
         setChatId,
         query,
         setQuery,
+        typingUsers,
+        setTypingUsers,
+        avatarShapeClass,
       }}
     >
       {children}
@@ -176,5 +211,5 @@ export const ContextProvider = ({ children }) => {
   );
 };
 
-//custom hook
+// custom hook
 export const useCC = () => useContext(Context);

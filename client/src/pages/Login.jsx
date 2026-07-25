@@ -7,8 +7,20 @@ import { BACKEND_URL } from "../constants";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { checkAuth, getUsers } = useCC();
+  const { checkAuth, getUsers, auth } = useCC();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth === null) {
+      checkAuth();
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    if (auth === true) {
+      navigate("/");
+    }
+  }, [auth]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +38,14 @@ export const Login = () => {
       alert(error?.response?.data?.message || "Sign in failed.");
     }
   };
+
+  if (auth === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[--color-background-tertiary] text-text-muted">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[--color-background-tertiary] p-6">

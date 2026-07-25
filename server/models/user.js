@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     profileImage: {
       type: String,
       default:
-        "https://cdn.hswstatic.com/gif/play/0b7f4e9b-f59c-4024-9f06-b3dc12850ab7-1920-1080.jpg",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
     },
 
     bio: {
@@ -45,6 +45,25 @@ const userSchema = new mongoose.Schema(
     blockedBy: {
       type: [String],
     },
+
+    theme: {
+      type: String,
+      enum: ["violet", "midnight", "emerald", "ocean", "sunset"],
+      default: "violet",
+    },
+    
+    avatarShape: {
+      type: String,
+      enum: ["wobbly", "circle", "squircle", "blob2", "teardrop"],
+      default: "wobbly",
+    },
+    
+    customAvatars: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String, required: true }
+      }
+    ],
   },
   {
     timestamps: true,

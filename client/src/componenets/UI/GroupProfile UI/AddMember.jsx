@@ -25,19 +25,19 @@ export const AddMember = ({ setIsAddAdmin, group }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl  h-90 w-77 p-2 flex flex-col gap-y-2">
+    <div className="bg-surface border border-border-color rounded-2xl h-90 w-77 p-2 flex flex-col gap-y-2 text-text-base">
       <div className="flex justify-between">
-        <h2 className="text-lg text-violet-500 font-semibold">Add Members</h2>
+        <h2 className="text-lg text-primary font-semibold">Add Members</h2>
         <IoClose
           size={25}
           onClick={() => setIsAddAdmin(false)}
-          className="font-bold text-violet-500"
+          className="font-bold text-primary hover:cursor-pointer"
         />
       </div>
 
       {/* Show remaining users */}
       {remainMembers.length < 1 ? (
-        <p className="text-gray-600 text-center mt-10">
+        <p className="text-text-muted text-center mt-10">
           All users have been added.
         </p>
       ) : (
@@ -56,7 +56,7 @@ export const AddMember = ({ setIsAddAdmin, group }) => {
 
               <button
                 onClick={() => addMember(user._id)}
-                className="rounded-md px-4 py-1 bg-violet-500 text-white hover:cursor-pointer"
+                className="rounded-md px-4 py-1 bg-primary text-white hover:cursor-pointer"
               >
                 Add
               </button>

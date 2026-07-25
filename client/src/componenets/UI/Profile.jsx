@@ -11,7 +11,7 @@ import { BACKEND_URL } from "../../constants";
 import { useEffect } from "react";
 
 export const Profile = ({ setShowProfile, user }) => {
-  const { onlineUsers, userId, users, loginUser } = useCC();
+  const { onlineUsers, userId, users, loginUser, avatarShapeClass } = useCC();
 
   const blockUser = async (blockId) => {
     try {
@@ -40,7 +40,7 @@ export const Profile = ({ setShowProfile, user }) => {
   return (
     <>
       <div
-        className={`flex flex-col gap-y-8 rouned ${loginUser?.darkmode ? "text-white bg-black" : "text-black bg-white"} h-screen w-85 shadow-2xl p-4 py-6 transition-all duration-500`}
+        className="flex flex-col gap-y-8 rouned text-text-base bg-sidebar h-screen w-85 shadow-2xl p-4 py-6 transition-all duration-500"
       >
         <div className="flex justify-between items-center">
           <p className="font-bold text-lg">User Info</p>
@@ -57,11 +57,11 @@ export const Profile = ({ setShowProfile, user }) => {
             <img
               src={user.profileImage}
               alt=""
-              className="h-40 w-40 object-cover overflow-hidden rounded-[40%_60%_60%_40%/60%_40%_60%_40%]"
+              className={`h-40 w-40 object-cover overflow-hidden border border-primary ${avatarShapeClass}`}
             />
             <div className="absolute top-29 right-2 flex items-center gap-2">
               <span
-                className={`h-6 w-6  rounded-full ${onlineUsers.includes(user._id) ? "bg-green-500 border-3 border-white" : "bg-gray-300 border-3 border-white"}`}
+                className={`h-6 w-6  rounded-full ${onlineUsers.includes(user._id) ? "bg-green-500 border-3 border-sidebar" : "bg-text-dim border-3 border-sidebar"}`}
               ></span>
             </div>
           </div>
@@ -70,14 +70,14 @@ export const Profile = ({ setShowProfile, user }) => {
 
         {/* BIO */}
         <div className="flex flex-col gap-y-1">
-          <p className="text-violet-700 text-md font-semibold">Bio</p>
+          <p className="text-primary text-md font-semibold">Bio</p>
           <p>{user.bio}</p>
         </div>
 
         {/* contacts */}
         <div className="">
           <div className="flex gap-x-3 items-center">
-            <MdEmail size={20} className="text-violet-700" />
+            <MdEmail size={20} className="text-primary" />
             <p>{user.email}</p>
           </div>
         </div>
@@ -87,14 +87,14 @@ export const Profile = ({ setShowProfile, user }) => {
           {loginUser?.blocked?.includes(user._id) ? (
             <div
               onClick={() => unBlockUser(user._id)}
-              className={`flex gap-x-3 items-center rounded-md p-1 ${loginUser?.darkmode ? "hover:bg-gray-900" : "hover:bg-gray-100"} hover:cursor-pointer`}
+              className="flex gap-x-3 items-center rounded-md p-1 hover:bg-sidebar-hover hover:cursor-pointer"
             >
-              <CgUnblock size={20} className="text-gray-600" />
-              <p className="text-gray-600">Unblock User</p>
+              <CgUnblock size={20} className="text-text-muted" />
+              <p className="text-text-muted">Unblock User</p>
             </div>
           ) : loginUser?.blockedBy?.includes(user._id) ? (
             <div
-              className={`${loginUser?.darkmode ? "hover:bg-gray-900" : "hover:bg-gray-100"} flex gap-x-3 p-1 items-center`}
+              className="hover:bg-sidebar-hover flex gap-x-3 p-1 items-center"
             >
               <MdBlock size={20} />
               <div className="flex gap-x-1">
@@ -105,7 +105,7 @@ export const Profile = ({ setShowProfile, user }) => {
           ) : (
             <div
               onClick={() => blockUser(user._id)}
-              className={`flex gap-x-3 items-center rounded-md p-1 ${loginUser?.darkmode ? "hover:bg-gray-900" : "hover:bg-gray-100"} hover:cursor-pointer`}
+              className="flex gap-x-3 items-center rounded-md p-1 hover:bg-sidebar-hover hover:cursor-pointer"
             >
               <MdBlock size={20} className="text-red-500" />
               <p className="text-red-500">Block User</p>

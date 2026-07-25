@@ -10,14 +10,14 @@ import { GroupInfo } from "./GroupProfile UI/GroupInfo";
 import { GroupSettings } from "./GroupProfile UI/GroupSettings";
 
 export const GroupProfile = ({ setShowProfile, group }) => {
-  const { users, loginUser } = useCC();
+  const { users, loginUser, avatarShapeClass } = useCC();
   const admin = users.find((u) => u._id === group.superAdminId);
 
   const [tab, setTab] = useState("info");
 
   return (
     <div
-      className={`flex flex-col gap-y-3 rouned ${loginUser?.darkmode ? "text-white bg-black" : "text-black bg-white"} h-screen w-85 shadow-2xl p-4 py-6 transition-all duration-500`}
+      className="flex flex-col gap-y-3 rouned text-text-base bg-sidebar h-screen w-85 shadow-2xl p-4 py-6 transition-all duration-500"
     >
       <div className="flex justify-between items-center">
         <p className="font-bold text-lg">
@@ -32,12 +32,12 @@ export const GroupProfile = ({ setShowProfile, group }) => {
           <img
             src={group.profileImage}
             alt=""
-            className="h-35 w-35 object-cover overflow-hidden rounded-[40%_60%_60%_40%/60%_40%_60%_40%] "
+            className={`h-35 w-35 object-cover overflow-hidden border border-primary ${avatarShapeClass}`}
           />
         </div>
         <div className="flex flex-col gap-y-1 justify-center items-center">
           <p className="text-2xl font-semibold">{group.groupName}</p>
-          <p className="text-gray-500">
+          <p className="text-text-muted">
             created_by:{" "}
             {users.find((user) => user._id === group.superAdminId).username}
           </p>
@@ -54,12 +54,12 @@ export const GroupProfile = ({ setShowProfile, group }) => {
         <CgProfile
           onClick={() => setTab("info")}
           size={25}
-          className={`${tab == "info" ? "text-purple-600" : loginUser.darkmode ? "text-white" : "text-black" } animation`}
+          className={`${tab == "info" ? "text-primary" : "text-text-muted" } animation`}
         />
         <IoSettingsSharp
           onClick={() => setTab("settings")}
           size={25}
-          className={`${tab == "settings" ? "text-purple-600" : loginUser.darkmode ? "text-white" : "text-black" } animation`}
+          className={`${tab == "settings" ? "text-primary" : "text-text-muted" } animation`}
         />
       </div>
       )}
