@@ -37,29 +37,29 @@ export const Chats = ({setMobileView}) => {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 gap-y-1 rounded-4xl  border-1 bg-white border-gray-300 px-3 pt-3  ">
+      <div className="flex flex-col flex-1 min-h-0 gap-y-1 rounded-4xl border bg-sidebar border-border-color px-3 pt-3">
         {/* chat navigation*/}
-        <div className=" relative flex gap-x-6 text-sm font-semibold text-gray-500 pb-1 justify-center items-center  ">
+        <div className="relative flex gap-x-6 text-sm font-semibold text-text-muted pb-1 justify-center items-center">
           <button
             onClick={() => setTab("all")}
-            className={`hover:cursor-pointer ${tab === "all" && "text-violet-700  border-b-2"} `}
+            className={`hover:cursor-pointer ${tab === "all" && "text-primary border-b-2 border-primary"} `}
           >
             All
           </button>
           <button
             onClick={() => setTab("direct")}
-            className={`hover:cursor-pointer ${tab === "direct" && "text-violet-700  border-b-2"} `}
+            className={`hover:cursor-pointer ${tab === "direct" && "text-primary border-b-2 border-primary"} `}
           >
             Direct
           </button>
           
           <button
             onClick={() => setTab("groups")}
-            className={`hover:cursor-pointer ${tab === "groups" && "text-violet-700  border-b-2"} `}
+            className={`hover:cursor-pointer ${tab === "groups" && "text-primary border-b-2 border-primary"} `}
           >
             Groups
           </button>
-          <hr className="border-t border-gray-900 my-2" />
+          <hr className="border-t border-border-color my-2" />
         </div>
 
         <div className=" flex-1 min-h-0 overflow-y-auto hide-scrollbar  ">

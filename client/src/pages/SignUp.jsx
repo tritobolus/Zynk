@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BACKEND_URL } from "../constants";
+import { useCC } from "../context/Context";
 
 export const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -13,7 +14,20 @@ export const SignUp = () => {
   const [emailVerify, setEmailVerify] = useState(false);
   const [OTPLoading, setOTPLoading] = useState(false);
 
+  const { checkAuth, auth } = useCC();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth === null) {
+      checkAuth();
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    if (auth === true) {
+      navigate("/");
+    }
+  }, [auth]);
 
   const getOTP = async (email) => {
     try {
@@ -57,6 +71,14 @@ export const SignUp = () => {
       alert(error.response.data.message);
     }
   };
+
+  if (auth === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-400">
+        Loading...
+      </div>
+    );
+  }
 
   const inputBase = `w-full px-3.5 py-2.5 text-sm rounded-lg border border-gray-200 bg-gray-50
     focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition`;

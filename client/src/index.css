@@ -1,17 +1,207 @@
 @import "tailwindcss";
 
-/* HTML: <div class="loader"></div> */
+/* ═══════════════════════════════════════════════════
+   TAILWIND v4 THEME TOKENS
+   Maps CSS vars → Tailwind utility classes
+   e.g. bg-sidebar, text-text-base, border-border-color
+═══════════════════════════════════════════════════ */
+@theme {
+  /* Brand / Action */
+  --color-primary:        var(--primary);
+  --color-primary-light:  var(--primary-light);
+  --color-primary-dark:   var(--primary-dark);
+  --color-secondary:      var(--secondary);
 
-/* HTML: <div class="loader"></div> */
-/* HTML: <div class="loader"></div> */
+  /* App surfaces */
+  --color-app-bg:         var(--app-bg);
+  --color-sidebar:        var(--sidebar);
+  --color-sidebar-hover:  var(--sidebar-hover);
+  --color-chat-bg:        var(--chat-bg);
+  --color-surface:        var(--surface);
+  --color-surface-2:      var(--surface-2);
+  --color-input-bg:       var(--input-bg);
+
+  /* Chat bubbles */
+  --color-bubble-out:     var(--bubble-out);
+  --color-bubble-out-text:var(--bubble-out-text);
+  --color-bubble-in:      var(--bubble-in);
+  --color-bubble-in-text: var(--bubble-in-text);
+
+  /* Text */
+  --color-text-base:      var(--text-base);
+  --color-text-muted:     var(--text-muted);
+  --color-text-dim:       var(--text-dim);
+
+  /* Borders */
+  --color-border-color:   var(--border-color);
+
+  /* Seen tick color */
+  --color-seen-tick:      var(--seen-tick);
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME 1 — VIOLET  (Clean, Light, WhatsApp-style)
+═══════════════════════════════════════════════════ */
+:root,
+:root.theme-violet {
+  --primary:          #7c3aed;
+  --primary-light:    #ede9fe;
+  --primary-dark:     #6d28d9;
+  --secondary:        #4c1d95;
+
+  --app-bg:           #f1f0f5;
+  --sidebar:          #ffffff;
+  --sidebar-hover:    #f3f0fb;
+  --chat-bg:          #ede9fe20;
+  --surface:          #ffffff;
+  --surface-2:        #f3f0fb;
+  --input-bg:         #f3f4f6;
+
+  --bubble-out:       #7c3aed;
+  --bubble-out-text:  #ffffff;
+  --bubble-in:        #ffffff;
+  --bubble-in-text:   #111827;
+
+  --text-base:        #111827;
+  --text-muted:       #6b7280;
+  --text-dim:         #9ca3af;
+
+  --border-color:     #e5e7eb;
+  --seen-tick:        #00f2fe;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME 2 — MIDNIGHT  (Deep dark purple, Discord-like)
+═══════════════════════════════════════════════════ */
+:root.theme-midnight {
+  --primary:          #a78bfa;
+  --primary-light:    #2d2050;
+  --primary-dark:     #7c3aed;
+  --secondary:        #c4b5fd;
+
+  --app-bg:           #0d0d17;
+  --sidebar:          #13131f;
+  --sidebar-hover:    #1e1b35;
+  --chat-bg:          #0f0f1c;
+  --surface:          #1a1a2e;
+  --surface-2:        #16213e;
+  --input-bg:         #1e1e30;
+
+  --bubble-out:       #7c3aed;
+  --bubble-out-text:  #ffffff;
+  --bubble-in:        #1a1a2e;
+  --bubble-in-text:   #e2e8f0;
+
+  --text-base:        #e2e8f0;
+  --text-muted:       #a0aec0;
+  --text-dim:         #718096;
+
+  --border-color:     #2d2d4a;
+  --seen-tick:        #00f2fe;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME 3 — EMERALD  (WhatsApp green, light mode)
+═══════════════════════════════════════════════════ */
+:root.theme-emerald {
+  --primary:          #059669;
+  --primary-light:    #d1fae5;
+  --primary-dark:     #047857;
+  --secondary:        #064e3b;
+
+  --app-bg:           #f0fdf4;
+  --sidebar:          #ffffff;
+  --sidebar-hover:    #ecfdf5;
+  --chat-bg:          #dcfce7;
+  --surface:          #ffffff;
+  --surface-2:        #f0fdf4;
+  --input-bg:         #f0fdf4;
+
+  --bubble-out:       #059669;
+  --bubble-out-text:  #ffffff;
+  --bubble-in:        #ffffff;
+  --bubble-in-text:   #064e3b;
+
+  --text-base:        #064e3b;
+  --text-muted:       #065f46;
+  --text-dim:         #6b7280;
+
+  --border-color:     #bbf7d0;
+  --seen-tick:        #38bdf8;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME 4 — OCEAN  (Telegram dark, deep navy)
+═══════════════════════════════════════════════════ */
+:root.theme-ocean {
+  --primary:          #2b9ced;
+  --primary-light:    #1c3a54;
+  --primary-dark:     #0284c7;
+  --secondary:        #93c5fd;
+
+  --app-bg:           #17212b;
+  --sidebar:          #212d3b;
+  --sidebar-hover:    #2b3a4d;
+  --chat-bg:          #0e1621;
+  --surface:          #242f3d;
+  --surface-2:        #2b3a4d;
+  --input-bg:         #2c3e50;
+
+  --bubble-out:       #2b5278;
+  --bubble-out-text:  #ffffff;
+  --bubble-in:        #212d3b;
+  --bubble-in-text:   #ffffff;
+
+  --text-base:        #ffffff;
+  --text-muted:       #a0aec0;
+  --text-dim:         #718096;
+
+  --border-color:     #2d3f52;
+  --seen-tick:        #00f2fe;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME 5 — SUNSET  (Warm rose, light feminine feel)
+═══════════════════════════════════════════════════ */
+:root.theme-sunset {
+  --primary:          #be185d;
+  --primary-light:    #fce7f3;
+  --primary-dark:     #9d174d;
+  --secondary:        #831843;
+
+  --app-bg:           #fff5f7;
+  --sidebar:          #ffffff;
+  --sidebar-hover:    #fce7f3;
+  --chat-bg:          #fdf2f8;
+  --surface:          #ffffff;
+  --surface-2:        #fce7f3;
+  --input-bg:         #fff5f7;
+
+  --bubble-out:       #be185d;
+  --bubble-out-text:  #ffffff;
+  --bubble-in:        #ffffff;
+  --bubble-in-text:   #831843;
+
+  --text-base:        #831843;
+  --text-muted:       #9d174d;
+  --text-dim:         #9ca3af;
+
+  --border-color:     #fbcfe8;
+  --seen-tick:        #00e5ff;
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE STYLES
+═══════════════════════════════════════════════════ */
 body {
   font-family: "Crimson Pro", serif;
   font-optical-sizing: auto;
   font-weight: 500;
   font-style: normal;
-  /* font-size: 20px; */
+  background-color: var(--app-bg);
+  color: var(--text-base);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
-
 
 .loader {
   width: 30px;
@@ -25,7 +215,6 @@ body {
   animation: l23 1s infinite steps(12);
 }
 .loader::before,
-
 .loader::after {
    content: "";
    grid-area: 1/1;
@@ -34,21 +223,19 @@ body {
    opacity: 0.915;
    transform: rotate(30deg);
 }
-
-/* for dark mode animation */
-.animation {
-  @apply transition-all duration-500
-}
-
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
-
 .loader::after {
    opacity: 0.83;
    transform: rotate(60deg);
 }
 @keyframes l23 {
   100% {transform: rotate(1turn)}
+}
+
+.animation {
+  @apply transition-all duration-500
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

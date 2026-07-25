@@ -1,23 +1,21 @@
 import { useCC } from "../context/Context";
 import { useEffect, useState, useRef } from "react";
-import { IoSend } from "react-icons/io5";
-import { ImAttachment } from "react-icons/im";
-import { BsEmojiSmile } from "react-icons/bs";
-import { MdOutlineClose } from "react-icons/md";
-import { FaMicrophone } from "react-icons/fa";
-import { IoIosArrowBack } from "react-icons/io";
-import { CgUnblock } from "react-icons/cg";
-
 import axios from "axios";
 
 import { BACKEND_URL } from "../constants";
-
 import { socket } from "../socket/socket";
 import { Profile } from "./UI/Profile";
 import { GroupProfile } from "./UI/GroupProfile";
 import { Emoji } from "./UI/Emoji_Picker/Emoji";
 import { Loading } from "./UI/Loading";
 import { RightSideTemp } from "./UI/RightSideTemp";
+
+import { ChatHeader } from "./UI/chat/ChatHeader";
+import { MessageList } from "./UI/chat/MessageList";
+import { BlockedBanner } from "./UI/chat/BlockedBanner";
+import { ChatInput } from "./UI/chat/ChatInput";
+import { ForwardModal } from "./UI/chat/ForwardModal";
+import { playSendSound, playReceiveSound } from "../utils/sound";
 
 export const Rightside = ({ setShowProfile, showProfile }) => {
   const [user, setUser] = useState(null);
@@ -26,13 +24,19 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
   const [messageLoading, setMessageLoading] = useState(false);
 
   const [attachment, setAttachment] = useState(null);
-
   const [profile, setProfile] = useState(false);
 
   const [isMediaLoding, setIsMediaLoading] = useState(false);
   const [isEmoji, setIsEmoji] = useState(false);
 
-  //for voice messages
+  // Message Forwarding Modal State
+  const [forwardMessage, setForwardMessage] = useState(null);
+
+  // Message Search State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchMessageQuery, setSearchMessageQuery] = useState("");
+
+  // For voice messages
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -58,10 +62,13 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     setGroups,
     setLastPrivateChats,
     setLastGroupChats,
+    setUnreadCounts,
     chatId,
+    typingUsers,
+    setTypingUsers,
   } = useCC();
 
-   const unBlockUser = async (blockId) => {
+  const unBlockUser = async (blockId) => {
     try {
       const res = await axios.post(BACKEND_URL + "/user/unblockUser", {
         unBlockById: loginUser?._id,
@@ -73,36 +80,10 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     }
   };
 
-  const linkifyText = (text, isMyMessage) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    return text.split(urlRegex).map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline break-all font-medium
-            ${
-              isMyMessage
-                ? "text-white hover:text-gray-200" // purple bg
-                : "text-blue-600 hover:text-blue-800" // white bg
-            }`}
-          >
-            {part}
-          </a>
-        );
-      }
-      return part;
-    });
-  };
-
   const startRecording = async () => {
     setAudioURL(null);
-    isCancelledRef.current = false; // reset
-    setRecordingTime(0); // reset timer
+    isCancelledRef.current = false;
+    setRecordingTime(0);
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -115,15 +96,15 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
 
     mediaRecorder.onstop = async () => {
       if (isCancelledRef.current) {
-        audioChunks.current = []; // discard audio
-        return; //  DO NOT SEND
+        audioChunks.current = [];
+        return;
       }
       const blob = new Blob(audioChunks.current, { type: "audio/webm" });
       setAudioBlob(blob);
       const url = URL.createObjectURL(blob);
       setAudioURL(url);
       audioChunks.current = [];
-      clearInterval(timerRef.current); // stop timer
+      clearInterval(timerRef.current);
 
       await sendMessage(blob);
     };
@@ -131,14 +112,13 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     mediaRecorder.start();
     setIsRecording(true);
 
-    // START TIMER
     timerRef.current = setInterval(() => {
       setRecordingTime((prev) => prev + 1);
     }, 1000);
   };
 
   const stopRecording = (cancel = false) => {
-    isCancelledRef.current = cancel; // ✅ correct
+    isCancelledRef.current = cancel;
     mediaRecorderRef.current.stop();
     setIsRecording(false);
     clearInterval(timerRef.current);
@@ -151,35 +131,48 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  // Reset state instantly when switching active chat window
   useEffect(() => {
     setProfile(false);
     setIsEmoji(false);
-  }, [currentRightWindow]);
-
-  const handleProfile = () => {
-    if (profile) {
-      setProfile(false);
-    } else {
-      setProfile(true);
+    setMessages([]);
+    setMessageLoading(true);
+    setIsSearchOpen(false);
+    setSearchMessageQuery("");
+    if (currentRightWindow) {
+      setUnreadCounts((prev) => ({ ...prev, [currentRightWindow]: 0 }));
     }
-  };
+  }, [currentRightWindow, setUnreadCounts]);
 
-  // get selected user
+  // Get selected user or group
   useEffect(() => {
-    if (currentRightWindowType == "private") {
+    if (currentRightWindowType === "private") {
       const selectedUser = users.find((user) => user._id == currentRightWindow);
       setUser(selectedUser);
     }
 
-    if (currentRightWindowType == "group") {
+    if (currentRightWindowType === "group") {
       const selectedGroup = groups.find(
-        (group) => group._id == currentRightWindow,
+        (group) => group._id == currentRightWindow
       );
       setUser(selectedGroup);
     }
   }, [currentRightWindow, users, groups, currentRightWindowType]);
 
-  // send message
+  // Emit markAsSeen / markGroupAsSeen when active chat is open
+  useEffect(() => {
+    if (user?._id && userId) {
+      if (currentRightWindowType === "private") {
+        socket.emit("markAsSeen", { senderId: user._id, receiverId: userId });
+        setUnreadCounts((prev) => ({ ...prev, [user._id]: 0 }));
+      } else if (currentRightWindowType === "group") {
+        socket.emit("markGroupAsSeen", { groupId: user._id, userId });
+        setUnreadCounts((prev) => ({ ...prev, [user._id]: 0 }));
+      }
+    }
+  }, [user, userId, currentRightWindowType, setUnreadCounts]);
+
+  // Send message
   const sendMessage = async (audioBlobParam = null) => {
     if (currentRightWindowType === "group") {
       const currentGroup = groups.find((g) => g._id === currentRightWindow);
@@ -200,7 +193,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     try {
       setIsMediaLoading(true);
 
-      //Upload Image
+      // Upload Image
       if (attachment) {
         const imageData = new FormData();
         imageData.append("file", attachment);
@@ -209,7 +202,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
 
         const res = await axios.post(
           "https://api.cloudinary.com/v1_1/dqxfpedkq/image/upload",
-          imageData,
+          imageData
         );
 
         imageUrl = res.data.secure_url;
@@ -224,7 +217,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
 
         const res = await axios.post(
           "https://api.cloudinary.com/v1_1/dqxfpedkq/video/upload",
-          audioData,
+          audioData
         );
 
         audioUrl = res.data.secure_url;
@@ -256,16 +249,16 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
             messageType: "privateMessage",
             isMedia: isMedia,
             isAudio: isAudio,
-          },
+          }
         );
 
         socket.emit("sendMessage", res.data.responce);
         setMessages((prev) => [...prev, res.data.responce]);
+        playSendSound();
 
-        //updating last messages
         setLastPrivateChats((prev) => {
           const exists = prev.find(
-            (chat) => chat._id === res.data.responce.chatId,
+            (chat) => chat._id === res.data.responce.chatId
           );
 
           if (exists) {
@@ -279,11 +272,12 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
                     isGroup: false,
                     isAudio,
                     lastMessageTime: new Date(),
+                    lastMessageSeen: false,
+                    lastMessageSeenBy: [userId],
                   }
-                : chat,
+                : chat
             );
           }
-          //it is importtant when user start the chat for the first time
           return [
             {
               _id: res.data.responce.chatId,
@@ -297,6 +291,8 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
               isAudio,
               isGroup: false,
               lastMessageTime: new Date(),
+              lastMessageSeen: false,
+              lastMessageSeenBy: [userId],
             },
             ...prev,
           ];
@@ -314,15 +310,15 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
             messageType: "groupMessage",
             isMedia: isMedia,
             isAudio: isAudio,
-          },
+          }
         );
 
         socket.emit("sendMessage", res.data.responce);
+        playSendSound();
 
-        //updating last messages
         setLastGroupChats((prev) => {
           const exists = prev.find(
-            (chat) => chat._id === res.data.updatedChat._id,
+            (chat) => chat._id === res.data.updatedChat._id
           );
 
           if (exists) {
@@ -337,11 +333,11 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
                     isAudio: res.data.updatedChat.isAudio,
                     isGroup: true,
                     lastMessageTime: res.data.updatedChat.lastMessageTime,
+                    lastMessageSeenBy: [userId],
                   }
-                : chat,
+                : chat
             );
           }
-          //it is importtant when user start the chat for the first time
           return [
             {
               _id: res.data.updatedChat._id,
@@ -352,6 +348,7 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
               isAudio: res.data.updatedChat.isAudio,
               isGroup: true,
               lastMessageTime: res.data.updatedChat.lastMessageTime,
+              lastMessageSeenBy: [userId],
             },
             ...prev,
           ];
@@ -369,27 +366,31 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
   };
 
   const getMessages = async () => {
-    if (currentRightWindowType == "private") {
+    const activeWindow = currentRightWindow;
+    if (!activeWindow) return;
+
+    if (currentRightWindowType === "private") {
       try {
-        if (!userId && !user._id) {
-          alert("both are required!");
-        }
+        if (!userId || !user?._id) return;
         setMessageLoading(true);
-        const res = await axios.get(
-          BACKEND_URL + "/message/getmessages",
-          {
-            params: {
-              userA: userId,
-              userB: user._id,
-            },
+        const res = await axios.get(BACKEND_URL + "/message/getmessages", {
+          params: {
+            userA: userId,
+            userB: user._id,
           },
-        );
-        setMessages(res.data.messages);
-        setMessageLoading(false);
+        });
+
+        if (activeWindow === currentRightWindow) {
+          setMessages(res.data.messages);
+        }
       } catch (error) {
         console.log(error);
+      } finally {
+        if (activeWindow === currentRightWindow) {
+          setMessageLoading(false);
+        }
       }
-    } else if (currentRightWindowType == "group") {
+    } else if (currentRightWindowType === "group") {
       try {
         setMessageLoading(true);
         const res = await axios.get(
@@ -397,59 +398,169 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
           {
             params: {
               groupId: currentRightWindow,
+              userId: userId,
             },
-          },
+          }
         );
-        setMessages(res.data.messages);
-        setMessageLoading(false);
+
+        if (activeWindow === currentRightWindow) {
+          setMessages(res.data.messages);
+        }
       } catch (error) {
         console.log(error);
+      } finally {
+        if (activeWindow === currentRightWindow) {
+          setMessageLoading(false);
+        }
       }
     }
   };
 
-  // socket join
+  // Socket join user and handle auto-reconnect
   useEffect(() => {
-    if (userId) {
+    if (!userId) return;
+
+    const joinRooms = () => {
       socket.emit("join", userId);
-    }
-  }, [userId]);
+      if (groups && groups.length > 0) {
+        groups.forEach((group) => {
+          socket.emit("joinGroup", group._id);
+        });
+      }
+    };
 
-  //join to all groups
-  useEffect(() => {
-    const myGroups = groups.filter(
-      (group) => group.adminId === userId || group.members.includes(userId),
-    );
+    joinRooms();
+    socket.on("connect", joinRooms);
 
-    if (myGroups.length > 0) {
-      myGroups.forEach((group) => {
-        socket.emit("joinGroup", group._id);
-      });
-    }
-  }, [groups]);
+    return () => {
+      socket.off("connect", joinRooms);
+    };
+  }, [userId, groups]);
 
-  // fetch messages when user changes
+  // Fetch messages when user/window changes
   useEffect(() => {
     if (user && userId) {
-      // console.log(" Calling getMessages with:", userId, user._id);
       getMessages();
     }
   }, [user, userId]);
 
-  // receive socket message
+  // Listen for messagesSeen event (when receiver opens sender's messages)
   useEffect(() => {
-    socket.on("receiveMessage", (data) => {
-      console.log(data);
+    const handleMessagesSeen = ({ senderId, receiverId, chatId }) => {
+      if (String(senderId) === String(userId)) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            String(msg.senderId) === String(userId)
+              ? { ...msg, isSeen: true }
+              : msg
+          )
+        );
+        setLastPrivateChats((prev) =>
+          prev.map((chat) => {
+            const matchesId = chatId && String(chat._id) === String(chatId);
+            const matchesMembers = chat.members?.some(
+              (m) => String(m) === String(receiverId)
+            );
+            if (matchesId || matchesMembers) {
+              return { ...chat, lastMessageSeen: true };
+            }
+            return chat;
+          })
+        );
+      }
+    };
+
+    socket.on("messagesSeen", handleMessagesSeen);
+    return () => socket.off("messagesSeen", handleMessagesSeen);
+  }, [userId]);
+
+  // Listen for group messages seen — update seenBy on individual messages in state
+  useEffect(() => {
+    const handleGroupMessagesSeen = ({ groupId, seenByUserId, updatedMessages }) => {
+      if (String(groupId) === String(currentRightWindow)) {
+        setMessages((prev) =>
+          prev.map((msg) => {
+            const updated = updatedMessages.find((u) => u._id === String(msg._id));
+            if (updated) return { ...msg, seenBy: updated.seenBy };
+            return msg;
+          })
+        );
+      }
+      setLastGroupChats((prev) =>
+        prev.map((chat) => {
+          if (String(chat.groupId) === String(groupId)) {
+            const latestMsg = updatedMessages[updatedMessages.length - 1];
+            if (latestMsg) {
+              return { ...chat, lastMessageSeenBy: latestMsg.seenBy };
+            }
+          }
+          return chat;
+        })
+      );
+    };
+
+    socket.on("groupMessagesSeen", handleGroupMessagesSeen);
+    return () => socket.off("groupMessagesSeen", handleGroupMessagesSeen);
+  }, [currentRightWindow]);
+
+  // Listen for typing events
+  useEffect(() => {
+    const handleUserTyping = ({ senderId, senderName, chatType, targetId, isTyping }) => {
+      setTypingUsers((prev) => {
+        const copy = { ...prev };
+        if (chatType === "private") {
+          if (isTyping) {
+            copy[targetId] = { isTyping: true, username: senderName };
+          } else {
+            delete copy[targetId];
+          }
+        } else if (chatType === "group") {
+          const groupTyping = { ...(copy[targetId] || {}) };
+          if (isTyping) {
+            groupTyping[senderId] = { isTyping: true, username: senderName };
+          } else {
+            delete groupTyping[senderId];
+          }
+          if (Object.keys(groupTyping).length > 0) {
+            copy[targetId] = groupTyping;
+          } else {
+            delete copy[targetId];
+          }
+        }
+        return copy;
+      });
+    };
+
+    socket.on("userTyping", handleUserTyping);
+    return () => socket.off("userTyping", handleUserTyping);
+  }, [setTypingUsers]);
+
+  // Receive socket message in real-time
+  useEffect(() => {
+    const handleReceiveMessage = (data) => {
+      console.log("Socket received message:", data);
+
+      if (String(data.senderId) !== String(userId)) {
+        playReceiveSound();
+      }
+
       if (data.messageType === "privateMessage") {
-        if (
-          data.senderId === currentRightWindow &&
-          data.receiverId === userId
-        ) {
-          // only tokhon UI te show korbe
+        const isCurrentChat =
+          (String(data.senderId) === String(currentRightWindow) &&
+            String(data.receiverId) === String(userId)) ||
+          (String(data.senderId) === String(userId) &&
+            String(data.receiverId) === String(currentRightWindow));
+
+        if (isCurrentChat) {
           setMessages((prev) => [...prev, data]);
+          socket.emit("markAsSeen", { senderId: data.senderId, receiverId: userId });
+        } else {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [data.senderId]: (prev[data.senderId] || 0) + 1,
+          }));
         }
 
-        //updating last  messagwe state when a message received
         setLastPrivateChats((prev) => {
           const exists = prev.find((chat) => chat._id === data.chatId);
 
@@ -463,12 +574,13 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
                     isMedia: data.isMedia,
                     isAudio: data.isAudio,
                     lastMessageTime: new Date(),
+                    lastMessageSeen: isCurrentChat,
+                    lastMessageSeenBy: isCurrentChat ? [userId, data.senderId] : [data.senderId],
                   }
-                : chat,
+                : chat
             );
           }
 
-          // if chat doesn't exist (first message case)
           return [
             {
               _id: data.chatId,
@@ -477,7 +589,10 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
               lastMessageSenderId: data.senderId,
               isMedia: data.isMedia,
               isAudio: data.isAudio,
+              isGroup: false,
               lastMessageTime: new Date(),
+              lastMessageSeen: isCurrentChat,
+              lastMessageSeenBy: isCurrentChat ? [userId, data.senderId] : [data.senderId],
             },
             ...prev,
           ];
@@ -485,19 +600,19 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
       }
 
       if (data.messageType === "groupMessage") {
-        const currentGroup = groups.find((group) => group._id === data.groupId);
+        const isCurrentGroup =
+          String(data.groupId) === String(currentRightWindow);
 
-        if (!currentGroup) return;
-
-        if (
-          (currentGroup.adminId === userId ||
-            currentGroup.members.includes(userId)) &&
-          data.groupId == currentRightWindow
-        ) {
+        if (isCurrentGroup) {
           setMessages((prev) => [...prev, data]);
+          socket.emit("markGroupAsSeen", { groupId: data.groupId, userId });
+        } else if (String(data.senderId) !== String(userId)) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [data.groupId]: (prev[data.groupId] || 0) + 1,
+          }));
         }
 
-        //updating last messages
         setLastGroupChats((prev) => {
           const exists = prev.find((chat) => chat._id === data.chatId);
 
@@ -512,81 +627,45 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
                     isAudio: data.isAudio,
                     isGroup: true,
                     lastMessageTime: new Date(),
+                    lastMessageSeenBy: isCurrentGroup ? [userId, data.senderId] : [data.senderId],
                   }
-                : chat,
+                : chat
             );
           }
-          //it is importtant when user start the chat for the first time
+
           return [
             {
               _id: data.chatId,
               groupId: data.groupId,
               lastMessage: data.message,
-              lastMessageSenderId: data.SenderId,
+              lastMessageSenderId: data.senderId,
               isMedia: data.isMedia,
               isAudio: data.isAudio,
               isGroup: true,
               lastMessageTime: new Date(),
+              lastMessageSeenBy: isCurrentGroup ? [userId, data.senderId] : [data.senderId],
             },
             ...prev,
           ];
         });
       }
+    };
 
-      // //updating last  messagwe state when a message received
-      // setLastPrivateChats((prev) => {
-      //   const exists = prev.find((chat) => chat._id === data.chatId);
+    socket.on("receiveMessage", handleReceiveMessage);
+    return () => socket.off("receiveMessage", handleReceiveMessage);
+  }, [currentRightWindow, userId, setLastPrivateChats, setLastGroupChats, setUnreadCounts]);
 
-      //   if (exists) {
-      //     return prev.map((chat) =>
-      //       chat._id === data.chatId
-      //         ? {
-      //             ...chat,
-      //             lastMessage: data.message,
-      //             lastMessageSenderId: data.senderId,
-      //             isMedia: data.isMedia,
-      //             isAudio: data.isAudio,
-      //             lastMessageTime: new Date(),
-      //           }
-      //         : chat,
-      //     );
-      //   }
-
-      //   // if chat doesn't exist (first message case)
-      //   return [
-      //     {
-      //       _id: data.chatId,
-      //       members: [data.senderId, data.receiverId],
-      //       lastMessage: data.message,
-      //       lastMessageSenderId: data.senderId,
-      //       isMedia: data.isMedia,
-      //       isAudio: data.isAudio,
-      //       lastMessageTime: new Date(),
-      //     },
-      //     ...prev,
-      //   ];
-      // });
-    });
-
-    return () => socket.off("receiveMessage");
-  }, [currentRightWindow]);
-
-  //remove group member
+  // Remove group member notification
   useEffect(() => {
     socket.on("removedFromGroup", ({ groupId }) => {
-      // console.log("Removed from group:", groupId);
-
-      // Remove group from list
       setGroups((prev) => prev.filter((g) => g._id !== groupId));
 
-      // If user is currently inside that group
       if (
         currentRightWindowType === "group" &&
         currentRightWindow === groupId
       ) {
         alert("You were removed from this group");
 
-        // 🔥 Clear UI
         setCurrentRightWindow(null);
         setCurrentRightWindowType(null);
         setUser(null);
@@ -597,11 +676,9 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
     return () => socket.off("removedFromGroup");
   }, [currentRightWindow, currentRightWindowType]);
 
-  // notify user who added to a group
+  // Notify user who was added to a group
   useEffect(() => {
     socket.on("addedToGroup", ({ group }) => {
-      console.log("Added to group:", group);
-
       setGroups((prev) => {
         const exists = prev.some((g) => g._id === group._id);
         if (exists) return prev;
@@ -609,364 +686,172 @@ export const Rightside = ({ setShowProfile, showProfile }) => {
         return [...prev, group];
       });
 
-      // join socket room
       socket.emit("joinGroup", group._id);
     });
 
     return () => socket.off("addedToGroup");
   }, []);
 
-  //update all existing users when a new user removed or added
+  // Update all existing users when a group is updated
   useEffect(() => {
     socket.on("groupUpdated", (updatedGroup) => {
-      console.log("Group updated:", updatedGroup);
-
-      // Update group in state
       setGroups((prev) =>
-        prev.map((g) => (g._id === updatedGroup._id ? updatedGroup : g)),
+        prev.map((g) => (g._id === updatedGroup._id ? updatedGroup : g))
       );
     });
 
     return () => socket.off("groupUpdated");
   }, []);
 
-  // auto scroll
+  // Listen for message reactions in real-time
+  useEffect(() => {
+    const handleReceiveMessageReaction = ({ messageId, reactions }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, reactions } : msg
+        )
+      );
+    };
+
+    socket.on("receiveMessageReaction", handleReceiveMessageReaction);
+    return () => socket.off("receiveMessageReaction", handleReceiveMessageReaction);
+  }, []);
+
+  const handleReactToMessage = async (messageId, emoji) => {
+    try {
+      const res = await axios.post(BACKEND_URL + "/message/reactToMessage", {
+        messageId,
+        senderId: userId,
+        emoji,
+      });
+
+      // Update state
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, reactions: res.data.reactions } : msg
+        )
+      );
+
+      // Find the message in state to get receiverId/groupId
+      const msg = messages.find((m) => m._id === messageId);
+      if (msg) {
+        // Emit to socket
+        socket.emit("sendMessageReaction", {
+          messageId,
+          reactions: res.data.reactions,
+          receiverId: msg.receiverId,
+          groupId: msg.groupId,
+          messageType: msg.messageType,
+        });
+      }
+    } catch (error) {
+      console.error("Error reacting to message:", error);
+    }
+  };
+
+  // Auto scroll
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages]);
 
+  const isBlockedOrBlockedBy =
+    loginUser?.blocked?.includes(user?._id) ||
+    loginUser?.blockedBy?.includes(user?._id);
+
   return (
-    <>
-      <div className="relative h-screen">
-        {user ? (
-          <div className="bg-violet-100 flex flex-col justify-between h-screen">
-            {/* HEADER */}
-            <div
-              className={`flex justify-between ${loginUser.darkmode ? "bg-black border-gray-900" : "bg-white border-gray-200"} border-b-2  shadow-xl p-2 transition-all duration-500`}
-            >
-              {/* <button
-                onClick={() => setCurrentRightWindow(null)}
-                className="md:hidden p-2 hover:bg-gray-100 rounded-full"
-              >
-                <IoIosArrowBack size={24} className="text-violet-700" />
-              </button> */}
-              <div
-                onClick={() => setShowProfile(!showProfile)}
-                className="flex items-center gap-x-2 hover:cursor-pointer"
-              >
-                <img
-                  src={user?.profileImage}
-                  alt=""
-                  className="h-12 w-12 object-cover overflow-hidden rounded-[40%_60%_60%_40%/60%_40%_60%_40%] hover:scale-105 transition"
-                />
-                <div className="flex flex-col leading-tight">
-                  <p
-                    className={`${loginUser.darkmode ? "text-white" : "text-black"} font-bold transition-all duration-500`}
-                  >
-                    {currentRightWindowType == "private"
-                      ? user?.username
-                      : user?.groupName}
-                  </p>
-                  {currentRightWindowType == "private" ? (
-                    <div className="text-sm">
-                      {onlineUsers.includes(user._id) ? (
-                        <p className=" text-green-500">Online</p>
-                      ) : (
-                        <p className=" text-gray-500">Offline</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      className={`text-sm flex gap-x-1 ${loginUser.darkmode ? "text-gray-200" : "text-black"} animation`}
-                    >
-                      {user?.members?.map((memberId, index) => {
-                        const member = users.find((u) => u._id === memberId);
-                        return <p key={memberId}>{member?.username},</p>;
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+    <div className="relative h-screen">
+      {user ? (
+        <div className="bg-chat-bg flex flex-col justify-between h-screen">
+          {/* HEADER */}
+          <ChatHeader
+            user={user}
+            currentRightWindowType={currentRightWindowType}
+            onlineUsers={onlineUsers}
+            users={users}
+            loginUser={loginUser}
+            showProfile={showProfile}
+            setShowProfile={setShowProfile}
+            isSearchOpen={isSearchOpen}
+            setIsSearchOpen={setIsSearchOpen}
+            searchMessageQuery={searchMessageQuery}
+            setSearchMessageQuery={setSearchMessageQuery}
+          />
 
-            {/* CHAT AREA */}
-            <div
-              ref={chatRef}
-              className={`hide-scrollbar flex-1 overflow-y-auto px-4 py-4 space-y-1 ${loginUser.darkmode ? "bg-gray-900/99" : "bg-gray-100"} bg-black transition-all duration-500`}
-            >
-              {messages.length == 0 ? (
-                <p>You haven't started conversation yet</p>
-              ) : (
-                messages.map((message, index) => {
-                  // Detect previous and next messages
-                  const prevMessage = messages[index - 1];
-                  const nextMessage = messages[index + 1];
+          {/* CHAT AREA */}
+          <MessageList
+            messages={messages}
+            messageLoading={messageLoading}
+            loginUser={loginUser}
+            chatRef={chatRef}
+            userId={userId}
+            users={users}
+            currentRightWindowType={currentRightWindowType}
+            onForwardMessage={(msg) => setForwardMessage(msg)}
+            group={currentRightWindowType === "group" ? user : null}
+            searchMessageQuery={searchMessageQuery}
+            onReactToMessage={handleReactToMessage}
+          />
 
-                  // Check if message belongs to current user
-                  const isMyMessage = message.senderId === userId;
+          {/* MESSAGE INPUT or BLOCKED BANNER */}
+          {isBlockedOrBlockedBy ? (
+            <BlockedBanner
+              loginUser={loginUser}
+              user={user}
+              unBlockUser={unBlockUser}
+            />
+          ) : (
+            <ChatInput
+              loginUser={loginUser}
+              attachment={attachment}
+              setAttachment={setAttachment}
+              isRecording={isRecording}
+              setIsRecording={setIsRecording}
+              recordingTime={recordingTime}
+              formatTime={formatTime}
+              stopRecording={stopRecording}
+              startRecording={startRecording}
+              isMediaLoding={isMediaLoding}
+              message={message}
+              setMessage={setMessage}
+              isEmoji={isEmoji}
+              setIsEmoji={setIsEmoji}
+              audioBlob={audioBlob}
+              sendMessage={sendMessage}
+            />
+          )}
+        </div>
+      ) : (
+        <div
+          className="flex-1 flex justify-center items-center bg-chat-bg text-text-base h-full"
+        >
+          <RightSideTemp />
+        </div>
+      )}
 
-                  // Detect grouping
-                  const isPrevSameSender =
-                    prevMessage?.senderId === message.senderId;
-
-                  const isNextSameSender =
-                    nextMessage?.senderId === message.senderId;
-
-                  // Determine bubble shape
-                  let bubbleShape = "";
-
-                  if (!isPrevSameSender && !isNextSameSender) {
-                    bubbleShape = "rounded-xl mt-2";
-                  } else if (!isPrevSameSender && isNextSameSender) {
-                    bubbleShape = isMyMessage
-                      ? "rounded-t-xl rounded-bl-xl rounded-b"
-                      : "rounded-t-xl rounded-br-xl rounded-b";
-                  } else if (isPrevSameSender && isNextSameSender) {
-                    bubbleShape = isMyMessage
-                      ? "rounded-l-xl rounded-t rounded-br"
-                      : "rounded-r-xl rounded-t rounded-bl";
-                  } else if (isPrevSameSender && !isNextSameSender) {
-                    bubbleShape = isMyMessage
-                      ? "rounded-b-xl rounded-l-xl rounded-t"
-                      : "rounded-b-xl rounded-r-xl rounded-t";
-                  }
-
-                  return (
-                    <div
-                      key={message._id}
-                      className={`flex ${
-                        isMyMessage ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={` relative px-4 py-2 shadow text-sm max-w-xs 
-                    ${isMyMessage ? "bg-violet-700 text-white mr-2 pb-2 pr-15" : "bg-white ml-2 pr-15 pb-2 "}
-                    ${bubbleShape} ${prevMessage?.senderId !== message.senderId ? "mt-2" : ""}`}
-                      >
-                        {message.senderId !== userId &&
-                          prevMessage?.senderId !== message.senderId &&
-                          currentRightWindowType == "group" && (
-                            <p className="font-semibold text-purple-600">
-                              {
-                                users.find(
-                                  (user) => user._id == message.senderId,
-                                ).username
-                              }
-                            </p>
-                          )}
-
-                        {message.isMedia ? (
-                          <img
-                            src={message.message}
-                            className="h-40 rounded-xl "
-                          />
-                        ) : message.isAudio ? (
-                          <audio
-                            className="mb-3"
-                            controls
-                            src={message.message}
-                          ></audio>
-                        ) : (
-                          <p className="break-words">
-                            {linkifyText(message.message, isMyMessage)}
-                          </p>
-                        )}
-                        {/* message sender indicator */}
-                        <div
-                          className={`absolute top-0 rounded-t-md h-3 w-5 
-                       ${
-                         message.senderId === userId
-                           ? `bg-violet-700 rounded-l-xl mr-2
-                            ${
-                              messages[index - 1] &&
-                              messages[index - 1].senderId === userId
-                                ? "hidden"
-                                : "-right-4 rounded-br-3xl"
-                            }`
-                           : `bg-white rounded-r-xl ml-2
-                            ${
-                              messages[index - 1] &&
-                              messages[index - 1].senderId == message.senderId
-                                ? "hidden"
-                                : "-left-4  rounded-bl-3xl"
-                            }
-                        `
-                       } 
-                    `}
-                        ></div>
-                        {/* message time */}
-                        <div className="absolute bottom-1 right-2">
-                          <p
-                            className={` text-[9px]  ${isMyMessage ? "text-gray-300" : "text-gray-600 "}`}
-                          >
-                            {new Date(message.createdAt).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* MESSAGE INPUT and chceking user blocked or not */}
-            {loginUser?.blocked?.includes(user._id) ? (
-              <div className="flex gap-x-5  justify-center items-center px-4 py-4">
-                <div className="flex gap-x-1">
-                  <p>You blocked</p>
-                  <p className="font-semibold ">{user.username}</p>
-                </div>
-                <button onClick={() => unBlockUser(user._id)} className="flex gap-x-1 items-center px-2 py-1 bg-gray-300 rounded-2xl hover:cursor-pointer hover:scale-102">
-                  <CgUnblock/>
-                  <p>Unblock</p>
-                </button>
-              </div>
-            ): loginUser?.blockedBy?.includes(user._id) ?(
-              <div className="flex gap-x-5  justify-center items-center px-4 py-5">
-                <div className="flex gap-x-1">
-                  <p className="font-semibold ">{user.username}</p>
-                  <p>blocked you</p>
-                </div>
-               
-              </div>
-            ) : (
-                <div
-              className={` flex gap-x-4 justify-center items-center ${loginUser.darkmode ? "bg-black" : "bg-white"}  px-4 py-3 transition-all duration-500`}
-            >
-              {/* attachment */}
-              <label className={`${isRecording && "hidden"} cursor-pointer`}>
-                <ImAttachment size={20} className="text-gray-500" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(e) => setAttachment(e.target.files[0])}
-                />
-              </label>
-
-              {/* input */}
-              <div className="relative w-full">
-                {attachment ? (
-                  <div className="flex gap-x-5 items-center px-2">
-                    <img
-                      src={URL.createObjectURL(attachment)}
-                      alt="preview"
-                      className="h-10  "
-                    />
-                    <MdOutlineClose
-                      className={`hover:cursor-pointer ${loginUser?.darkmode ? "text-white" : "text-black"} animation`}
-                      size={25}
-                      onClick={() => {
-                        (setAttachment(false), setAttachment(false));
-                      }}
-                    />
-                    {isMediaLoding && (
-                      <p className="text-red-500">wait image is sending...</p>
-                    )}
-                  </div>
-                ) : isRecording ? (
-                  <div className="flex gap-x-5">
-                    <span className="animate-pulse">🔴</span>
-                    <p className={`${loginUser.darkmode && "text-white"}`}>
-                      {formatTime(recordingTime)}
-                    </p>
-                    <button
-                      className="text-red-500 hover:cursor-pointer "
-                      onClick={() => stopRecording(true)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    value={message}
-                    placeholder="Type a message..."
-                    onChange={(e) => setMessage(e.target.value)}
-                    className={`rounded-full w-full  px-6 py-2 ${loginUser.darkmode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"} transition-all duration-500 focus:outline-none`}
-                  />
-                )}
-
-                {!attachment && (
-                  <BsEmojiSmile
-                    onClick={() => setIsEmoji(!isEmoji)}
-                    size={20}
-                    className={`${isRecording && "hidden"} absolute right-3 top-[11px]  hover:cursor-pointer ${isEmoji ? "text-purple-600 font-semibold" : "text-gray-500"}`}
-                  />
-                )}
-              </div>
-
-              {/* conditionally manage the icons of send message and record voice */}
-              {message.trim().length < 1 && !attachment && !audioBlob ? (
-                <button
-                  className={`  p-3 rounded-full bg-violet-700  hover:cursor-pointer`}
-                >
-                  {isRecording ? (
-                    <IoSend
-                      size={17}
-                      className="text-xl text-white"
-                      onClick={() => stopRecording(false)}
-                    />
-                  ) : (
-                    <FaMicrophone
-                      size={17}
-                      onClick={() => {
-                        (setIsRecording(true), startRecording());
-                      }}
-                      className="text-xl text-white"
-                    />
-                  )}
-                </button>
-              ) : (
-                <button
-                  disabled={message.trim().length < 1 && !attachment}
-                  onClick={() => {
-                    sendMessage();
-                    setMessage("");
-                    setIsEmoji(false);
-                  }}
-                  className={`  p-3 rounded-full bg-violet-700 ${message.trim().length < 1 && !attachment && "opacity-50 hover:cursor-not-allowed"} hover:cursor-pointer`}
-                >
-                  <IoSend size={17} className="text-xl text-white" />
-                </button>
-              )}
-            </div>
-            )}
-          
-
-          </div>
-        ) : (
-          <div
-            className={`flex-1 flex justify-center items-center ${loginUser?.darkmode ? "bg-black text-white" : "bg-white text-black"} h-full`}
-          >
-            <RightSideTemp />
-          </div>
+      {/* PROFILES */}
+      <div className="absolute top-0 right-0">
+        {profile && currentRightWindowType === "private" && (
+          <Profile setProfile={setProfile} user={user} />
         )}
-
-        {/* profiles */}
-        <div className="absolute top-0 right-0">
-          {profile && currentRightWindowType == "private" && (
-            <Profile setProfile={setProfile} user={user} />
-          )}
-          {profile && currentRightWindowType == "group" && (
-            <GroupProfile setProfile={setProfile} group={user} />
-          )}
-        </div>
-
-        {/* emoji picker */}
-        <div className="absolute bottom-16 right-20">
-          {isEmoji && <Emoji setMessage={setMessage} />}
-        </div>
-        
+        {profile && currentRightWindowType === "group" && (
+          <GroupProfile setProfile={setProfile} group={user} />
+        )}
       </div>
-    </>
+
+      {/* EMOJI PICKER */}
+      <div className="absolute bottom-16 right-20">
+        {isEmoji && <Emoji setMessage={setMessage} />}
+      </div>
+
+      {/* FORWARD MESSAGE MODAL */}
+      {forwardMessage && (
+        <ForwardModal
+          messageToForward={forwardMessage}
+          onClose={() => setForwardMessage(null)}
+        />
+      )}
+    </div>
   );
 };

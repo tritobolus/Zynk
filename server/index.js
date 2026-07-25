@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -6,17 +7,14 @@ import { Server } from "socket.io";
 
 import connectDB from "./config/db.js";
 
-import getUser from "./routes/userRoutes/userRoute.js";
-import authRoutes from "./routes/authRoutes/authRoute.js";
-import messageRoutes from "./routes/messageRoutes/messageRoute.js";
-import groupRoutes from "./routes/groupRoutes/groupRoute.js"
+import getUser from "./routes/userRoute.js";
+import authRoutes from "./routes/authRoute.js";
+import messageRoutes from "./routes/messageRoute.js";
+import groupRoutes from "./routes/groupRoute.js"
 import settings from "./routes/settingsRoute.js"
 
 import socketHandler from "./socket/socket.js";
 import { setIO } from "./socket/sokectInstance.js";
-
-import dotenv from "dotenv";
-dotenv.config();
 
 // ------------------------------------------------------------------------
 

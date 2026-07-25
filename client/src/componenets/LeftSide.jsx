@@ -31,6 +31,7 @@ export const LeftSide = () => {
     setCurrentRightWindowType,
     loginUser,
     setQuery,
+    avatarShapeClass,
   } = useCC();
 
   const [activeTab, setActiveTab] = useState("chats");
@@ -53,7 +54,7 @@ export const LeftSide = () => {
   return (
     <>
       <div
-        className={` relative flex flex-col px-1  h-screen ${loginUser?.darkmode ? "bg-black text-white" : "bg-white"} animation `}
+        className="relative flex flex-col px-1 h-screen bg-sidebar text-text-base animation border-r border-border-color"
       >
         {/* header */}
         <div className="flex flex-col gap-y-5 mx-5  my-2 mb-0 ">
@@ -63,48 +64,47 @@ export const LeftSide = () => {
             <div className="flex gap-x-3 justify-center  items-center">
               <div
                 onClick={() => setProfile(!profile)}
-                className=" relative bg-gray-200 w-12 rounded-r-4xl rounded-l-2xl  flex flex-col leading-tight hover:cursor-pointer z-10"
+                className="relative bg-surface-2 w-12 rounded-r-4xl rounded-l-2xl flex flex-col leading-tight hover:cursor-pointer z-10"
               >
                 <img
                   src={loginUser?.profileImage}
                   alt=""
-                  className="h-8 w-8 object-cover rounded-full -ml-2"
+                  className="h-8 w-8 object-cover rounded-full -ml-2 border border-primary"
                 />
                 {!profile && (
                   <IoIosArrowDropdownCircle
                     size={14}
-                    className="absolute top-[10px] right-1 text-gray-600"
+                    className="absolute top-[10px] right-1 text-text-muted"
                   />
                 )}
                 {profile && (
                   <IoIosArrowDropupCircle
                     size={14}
-                    className="absolute top-[10px] right-1 text-gray-600"
+                    className="absolute top-[10px] right-1 text-text-muted"
                   />
                 )}
               </div>
 
               {/* search chat */}
               <div
-                className={`relative rounded-4xl ${loginUser?.darkmode ? "bg-gray-900 text-white" : "bg-gray-100"}  
-                py-[6px] `}
+                className="relative rounded-4xl bg-input-bg py-[6px]"
               >
                 <input
                   type="text"
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="search chats..."
-                  className="pl-10 pr-4 focus:outline-none w-full"
+                  className="pl-10 pr-4 focus:outline-none w-full bg-transparent text-text-base placeholder-text-dim"
                 />
                 <IoMdSearch
                   size={18}
-                  className="absolute text-gray-500 top-[10px] left-3"
+                  className="absolute text-text-muted top-[10px] left-3"
                 />
               </div>
             </div>
 
             <div
               onClick={() => handleDropdown()}
-              className="hover:cursor-pointer rounded-full p-2 text-violet-700 active:bg-gray-200 transition-all duration-200 -mr-2"
+              className="hover:cursor-pointer rounded-full p-2 text-primary active:bg-surface-2 transition-all duration-200 -mr-2"
             >
               <SlOptionsVertical className="text-voilet-700" />
             </div>
@@ -112,7 +112,7 @@ export const LeftSide = () => {
         </div>
 
         {/* Chat section*/}
-        <div className=" flex flex-col flex-1 min-h-0   rounded-4xl  mb-2 bg-purple-100 mt-2 ">
+        <div className="flex flex-col flex-1 min-h-0 rounded-4xl mb-2 bg-surface-2 mt-2">
           <div
             className={`${onlineUsers.length < 1 && "hidden"} flex w-85 flex-shrink-0 justify-center overflow-x-auto gap-x-2  `}
           >
@@ -136,9 +136,9 @@ export const LeftSide = () => {
                     <img
                       key={user}
                       src={current.profileImage}
-                      className="w-9 h-9 rounded-full object-cover"
+                      className={`w-9 h-9 object-cover border border-primary ${avatarShapeClass}`}
                     />
-                    <div className="absolute bottom-1 border border-white -right-[1px] h-2 w-2 rounded-full bg-green-500"></div>
+                    <div className="absolute bottom-1 border border-sidebar -right-[1px] h-2 w-2 rounded-full bg-green-500"></div>
                   </div>
                 );
               })}
@@ -178,16 +178,16 @@ export const LeftSide = () => {
         </div> */}
 
         {/* DropDown UI */}
-        <div className="absolute top-14 right-5 shadow-2xl rounded-2xl">
+        <div className="absolute top-14  right-5 shadow-2xl rounded-2xl">
           {dropDown && <DropDown />}
         </div>
-        <div className="absolute top-0 right-0 shadow-2xl rounded-2xl">
+        <div className="absolute top-0 w-full right-0 shadow-2xl rounded-2xl">
           {newGroup && <NewGroup />}
         </div>
-        <div className="absolute top-0 right-0 shadow-2xl rounded-2xl">
+        <div className="absolute top-0 w-full right-0 shadow-2xl rounded-2xl">
           {settings && <Settings />}
         </div>
-        <div className="absolute top-0 right-0">
+        <div className="absolute w-full top-0 right-0">
           {profile && <MyProfile setProfile={setProfile} />}
         </div>
       </div>

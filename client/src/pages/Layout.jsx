@@ -27,20 +27,18 @@ export const Layout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (auth === false) {
+    if (auth === null) {
+      checkAuth();
+    } else if (auth === false) {
       navigate("/signin");
     }
   }, [auth]);
 
   useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      await checkAuth();
-      await getUsers();
-      setLoading(false);
-    };
-    init();
-  }, []);
+    if (auth === true) {
+      getUsers();
+    }
+  }, [auth]);
 
   useEffect(() => {
     if (loginUser?.activestatus == true) {

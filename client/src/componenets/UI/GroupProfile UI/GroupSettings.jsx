@@ -93,7 +93,7 @@ export const GroupSettings = ({ group }) => {
         <div className="flex flex-col gap-y-3 ">
           <p className="text-lg font-bold">Edit group details</p>
           <div
-            className={`flex flex-col gap-y-2 p-2 rounded-2xl ${loginUser.darkmode ? "bg-black" : "bg-gray-100"} animation`}
+            className="flex flex-col gap-y-2 p-2 rounded-2xl bg-surface animation border border-border-color"
           >
             {/* username */}
             <div className="flex flex-col gap-y-1">
@@ -104,19 +104,19 @@ export const GroupSettings = ({ group }) => {
                   type="text"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
-                  className={`px-2 py-1 border rounded-xl w-full ${isGroupName ? "border-gray-500" : "border-gray-300"}`}
+                  className="px-2 py-1 border border-border-color bg-input-bg text-text-base rounded-xl w-full focus:outline-none focus:border-primary"
                 />
                 {isGroupName ? (
                   <MdDone
                     onClick={() => handleGroupName()}
                     size={25}
-                    className="text-purple-700 hover:cursor-pointer"
+                    className="text-primary hover:cursor-pointer"
                   />
                 ) : (
                   <CiEdit
                     onClick={() => setIsGroupName(true)}
                     size={25}
-                    className="text-purple-700 hover:cursor-pointer"
+                    className="text-primary hover:cursor-pointer"
                   />
                 )}
               </div>
@@ -129,19 +129,19 @@ export const GroupSettings = ({ group }) => {
                   type="text"
                   value={newBio}
                   onChange={(e) => setNewBio(e.target.value)}
-                  className={`px-2 py-1 border rounded-xl w-full ${isBio ? "border-gray-500" : "border-gray-300"}`}
+                  className="px-2 py-1 border border-border-color bg-input-bg text-text-base rounded-xl w-full focus:outline-none focus:border-primary"
                 />
                 {isBio ? (
                   <MdDone
                     onClick={() => handleBio()}
                     size={25}
-                    className="text-purple-700 hover:cursor-pointer"
+                    className="text-primary hover:cursor-pointer"
                   />
                 ) : (
                   <CiEdit
                     onClick={() => setIsBio(true)}
                     size={25}
-                    className="text-purple-700 hover:cursor-pointer"
+                    className="text-primary hover:cursor-pointer"
                   />
                 )}
               </div>
@@ -154,7 +154,7 @@ export const GroupSettings = ({ group }) => {
         <div className="flex flex-col gap-y-1">
           <p>Change Profile Image</p>
           {!image ? (
-            <label className="block w-full text-center border border-purple-500 text-purple-600 py-2 rounded-lg cursor-pointer hover:bg-purple-500 hover:text-white transition">
+            <label className="block w-full text-center border border-primary text-primary py-2 rounded-lg cursor-pointer hover:bg-primary-light transition">
               Choose Image
               <input
                 onChange={(e) => setImage(e.target.files[0])}
@@ -172,13 +172,13 @@ export const GroupSettings = ({ group }) => {
               />
               <button
                 onClick={() => handleGroupProfileImage()}
-                className="px-3 py-1 bg-purple-500 rounded-xl text-white"
+                className="px-3 py-1 bg-primary hover:bg-primary-dark rounded-xl text-white cursor-pointer"
               >
                 Save
               </button>
               <button
                 onClick={() => setImage(false)}
-                className="px-3 py-1 bg-red-500 rounded-xl"
+                className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded-xl text-white cursor-pointer"
               >
                 Cancel
               </button>

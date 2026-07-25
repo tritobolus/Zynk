@@ -16,7 +16,7 @@ export const GroupInfo = ({ group, admin }) => {
       <div className="relative flex flex-col gap-y-3 flex-1 min-h-0 overflow-hidden ">
         {/* BIO */}
         <div className="flex flex-col gap-y-1">
-          <p className="text-violet-700 text-md font-semibold">Description: </p>
+          <p className="text-primary text-md font-semibold">Description: </p>
           <p>{group.bio}</p>
         </div>
 
@@ -24,13 +24,13 @@ export const GroupInfo = ({ group, admin }) => {
         <div className="flex flex-col gap-y-1 flex-1 min-h-0">
           <div className="flex flex-col gap-y-1">
             <div className="flex justify-between">
-              <p className="text-violet-700 text-md font-semibold">Members: </p>
+              <p className="text-primary text-md font-semibold">Members: </p>
 
               {(loginUser._id === group.superAdminId ||
                 group.adminId.includes(loginUser._id)) && (
                 <IoPersonAddSharp
                   onClick={() => setIsAddAdmin(!isAddAdmin)}
-                  className="text-violet-700 text-md font-semibold hover:cursor-pointer"
+                  className="text-primary text-md font-semibold hover:cursor-pointer"
                 />
               )}
             </div>
@@ -64,7 +64,7 @@ export const GroupInfo = ({ group, admin }) => {
                           </p>
                           {(memberUser._id === group.superAdminId ||
                             group.adminId.includes(memberUser._id)) && (
-                            <button className="px-2 border rounded scale-50">
+                            <button className="px-2 border border-border-color rounded scale-50 text-text-muted">
                               admin
                             </button>
                           )}

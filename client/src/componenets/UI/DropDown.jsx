@@ -45,25 +45,25 @@ export const DropDown = () => {
   return (
     <>
       <div
-        className={` relative flex flex-col gap-y-2 w-35 shadow-md ${loginUser.darkmode ? "bg-black shadow-white text-white" : "bg-white shadow-black "} p-2 rounded-lg text-sm animation`}
+        className="relative flex flex-col gap-y-2 w-35 shadow-md bg-surface text-text-base border border-border-color p-2 rounded-lg text-sm animation"
       >
         <div
           onClick={() => handleNewGroup()}
-          className={`flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded ${loginUser.darkmode ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+          className="flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded hover:bg-sidebar-hover"
         >
           <MdGroupAdd size={16} />
           <p>New group</p>
         </div>
         <div
           onClick={() => handleSettings()}
-          className={`flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded ${loginUser.darkmode ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+          className="flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded hover:bg-sidebar-hover"
         >
           <IoMdSettings size={16} />
           <p>Settings</p>
         </div>
         <div
           onClick={() => logout()}
-          className="flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded text-red-500 border-t-2 border-gray-200 pt-2"
+          className="flex gap-x-2 items-center justify-start hover:cursor-pointer p-1 rounded text-red-500 border-t border-border-color pt-2"
         >
           <IoIosLogOut size={16} />
           <p>Log out</p>
